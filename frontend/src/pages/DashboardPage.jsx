@@ -1,11 +1,8 @@
-import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getClaudeUsageSummary } from '../api.js'
 import { dashboardTiles } from '../modules/registry.js'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const claudeUsage = useMemo(() => getClaudeUsageSummary(20), [])
 
   function handleLogout() {
     sessionStorage.removeItem('atv_token')
@@ -31,18 +28,6 @@ export default function DashboardPage() {
             height={88}
           />
         </header>
-
-        <section className="dashboard-claude-balance" aria-label="Saldo estimado Claude">
-          <h2>Claude saldo estimado</h2>
-          <p>
-            Saldo restante aprox: <strong>USD {claudeUsage.monthRemainingUsd.toFixed(2)}</strong>
-          </p>
-          <small>
-            Presupuesto mes: USD {claudeUsage.monthlyBudgetUsd.toFixed(2)} · gastado: USD{' '}
-            {claudeUsage.monthSpentUsd.toFixed(4)} · tokens: entrada {claudeUsage.monthInputTokens} / salida{' '}
-            {claudeUsage.monthOutputTokens}
-          </small>
-        </section>
 
         <nav className="dashboard-grid" aria-label="Módulos ATV">
           {dashboardTiles.map((tile) => {
