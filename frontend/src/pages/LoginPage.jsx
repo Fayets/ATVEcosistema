@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loginRequest } from '../api.js'
+import { GIT_COMMIT_SHORT } from '../buildInfo.js'
 
 function IconUser() {
   return (
@@ -106,6 +107,10 @@ export default function LoginPage() {
           </form>
         </div>
       </main>
+
+      <footer className="login-version" title={`Commit ${GIT_COMMIT_SHORT}`}>
+        {GIT_COMMIT_SHORT}
+      </footer>
     </div>
   )
 }

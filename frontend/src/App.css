@@ -237,6 +237,21 @@
   transform: none;
 }
 
+.login-version {
+  position: fixed;
+  right: clamp(0.65rem, 2.5vw, 1rem);
+  bottom: clamp(0.65rem, 2.5vw, 1rem);
+  z-index: 2;
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(232, 230, 237, 0.38);
+  user-select: none;
+  pointer-events: none;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
