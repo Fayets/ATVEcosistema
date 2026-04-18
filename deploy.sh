@@ -35,13 +35,10 @@ git fetch "${REMOTE}"
 echo ">>> git reset --hard ${REMOTE}/${BRANCH}"
 git reset --hard "${REMOTE}/${BRANCH}"
 
-echo ">>> docker compose down"
-docker compose down
+echo ">>> docker compose down --remove-orphans"
+docker compose down --remove-orphans
 
-echo ">>> docker compose up -d --build"
-docker compose up -d --build
-
-echo ">>> Últimas líneas de logs del servicio backend:"
-docker compose logs --tail=120 backend
+echo ">>> docker compose up -d --build --remove-orphans"
+docker compose up -d --build --remove-orphans
 
 echo "Deploy finalizado."
