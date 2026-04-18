@@ -104,6 +104,15 @@ def _run_postgres_schema_patches() -> None:
                     )
                     """
                 )
+                cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS claude_area_system_prompt (
+                        area VARCHAR(32) PRIMARY KEY,
+                        instruction TEXT NOT NULL,
+                        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+                    )
+                    """
+                )
     finally:
         conn.close()
 

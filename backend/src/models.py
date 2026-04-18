@@ -129,3 +129,15 @@ class ClaudeBalanceConfig(db.Entity):
 
     def before_update(self) -> None:
         self.updated_at = datetime.now(timezone.utc)
+
+
+class ClaudeAreaSystemPrompt(db.Entity):
+    """System prompt persistido por área ATV (venta / cliente / marketing) para consultas Claude por cliente."""
+
+    _table_ = "claude_area_system_prompt"
+    area = PrimaryKey(str)
+    instruction = Required(str)
+    updated_at = Required(datetime, default=lambda: datetime.now(timezone.utc))
+
+    def before_update(self) -> None:
+        self.updated_at = datetime.now(timezone.utc)

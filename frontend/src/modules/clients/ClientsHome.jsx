@@ -9,6 +9,7 @@ import {
   deleteCliente,
   deleteDiscordDocumentoBlock,
   deleteFathomTranscript,
+  getClaudeAreaPrompts,
   getClaudeBalance,
   getClaudeStats,
   getDiscordDocumento,
@@ -16,7 +17,8 @@ import {
   getOnboarding,
   listClientes,
   listFathomTranscripts,
-  queryClaudeClient,
+  putClaudeAreaPrompts,
+  queryClaudeClientStream,
   resetClaudeBalance,
   updateCliente,
   updateDiscordDocumentoBlock,
@@ -81,6 +83,11 @@ function stripDiscordExportProfileHeader(text) {
   return lines.slice(startIdx).join('\n').trim()
 }
 
+function clientDisplayName(cliente) {
+  if (!cliente) return ''
+  return [cliente.nombre, cliente.apellido].filter(Boolean).join(' ').trim() || 'Sin nombre'
+}
+
 export default function ClientsHome() {
   const [activeView, setActiveView] = useState('dashboard')
   const [clientes, setClientes] = useState([])
@@ -119,6 +126,7 @@ export default function ClientsHome() {
   const [discordEditText, setDiscordEditText] = useState('')
   const [discordAppendOpen, setDiscordAppendOpen] = useState(false)
   const discordAppendRef = useRef(null)
+  const iaClienteComboRef = useRef(null)
   const [onboardingData, setOnboardingData] = useState(null)
   const [onboardingLoading, setOnboardingLoading] = useState(false)
   const [onboardingError, setOnboardingError] = useState('')
@@ -151,6 +159,18 @@ export default function ClientsHome() {
   ])
   const [iaInput, setIaInput] = useState('')
   const [iaClienteId, setIaClienteId] = useState('')
+  const [iaClienteSearch, setIaClienteSearch] = useState('')
+  const [iaClienteListOpen, setIaClienteListOpen] = useState(false)
+  /** Área ATV: mismo valor que envía el backend en `area` (venta | cliente | marketing). */
+  const [iaArea, setIaArea] = useState('cliente')
+  const [iaConfigLoading, setIaConfigLoading] = useState(false)
+  const [iaConfigSaving, setIaConfigSaving] = useState(false)
+  const [iaConfigMsg, setIaConfigMsg] = useState('')
+  const [iaConfigPrompts, setIaConfigPrompts] = useState({
+    venta: '',
+    cliente: '',
+    marketing: '',
+  })
   const [iaIncludeFathom, setIaIncludeFathom] = useState(true)
   const [iaIncludeDiscord, setIaIncludeDiscord] = useState(true)
   const [iaIncludeOnboarding, setIaIncludeOnboarding] = useState(true)
@@ -238,31 +258,38 @@ export default function ClientsHome() {
     [fathomTranscripts, fathomSelectedId],
   )
 
+  const iaClientesFiltered = useMemo(() => {
+    const q = iaClienteSearch.trim().toLowerCase()
+    if (!q) return []
+    const digits = q.replace(/\D/g, '')
+    return clientes
+      .filter((c) => {
+        const name = clientDisplayName(c).toLowerCase()
+        const prog = String(c.programa || '').toLowerCase()
+        const estado = String(c.estado || '').toLowerCase()
+        const id = String(c.id || '').toLowerCase()
+        const codigo = c.codigo_publico != null ? String(c.codigo_publico) : ''
+        return (
+          name.includes(q) ||
+          prog.includes(q) ||
+          estado.includes(q) ||
+          id.includes(q) ||
+          (digits.length > 0 && codigo.includes(digits))
+        )
+      })
+      .slice(0, 50)
+  }, [clientes, iaClienteSearch])
+
+  const iaClienteSeleccionLabel = useMemo(() => {
+    if (!iaClienteId) return ''
+    const sel = clientes.find((x) => String(x.id) === String(iaClienteId))
+    return clientDisplayName(sel) || iaClienteSearch.trim() || String(iaClienteId).slice(0, 8)
+  }, [clientes, iaClienteId, iaClienteSearch])
+
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   function toggleSidebar() {
     setSidebarOpen((prev) => !prev)
-  }
-
-  async function typeAssistantMessage(messageId, fullText, usage = null) {
-    const text = String(fullText || '')
-    const chunkSize = 6
-    const delayMs = 16
-    for (let i = 0; i <= text.length; i += chunkSize) {
-      const nextText = text.slice(0, i)
-      setIaMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === messageId
-            ? {
-                ...msg,
-                content: nextText,
-                usage: i >= text.length ? usage : null,
-              }
-            : msg,
-        ),
-      )
-      await new Promise((resolve) => setTimeout(resolve, delayMs))
-    }
   }
 
   function renderIaContent(text) {
@@ -299,6 +326,25 @@ export default function ClientsHome() {
     })
   }
 
+  function handleIaClienteSearchChange(e) {
+    const value = e.target.value
+    setIaClienteSearch(value)
+    setIaClienteListOpen(true)
+    setIaClienteId((currentId) => {
+      if (!currentId) return ''
+      const selected = clientes.find((c) => String(c.id) === String(currentId))
+      if (!selected) return ''
+      if (clientDisplayName(selected).trim() === value.trim()) return currentId
+      return ''
+    })
+  }
+
+  function handlePickIaCliente(c) {
+    setIaClienteId(String(c.id))
+    setIaClienteSearch(clientDisplayName(c))
+    setIaClienteListOpen(false)
+  }
+
   async function handleIaSubmit(e) {
     e.preventDefault()
     const text = iaInput.trim()
@@ -316,6 +362,9 @@ export default function ClientsHome() {
     setIaInput('')
     setIaSending(true)
     const thinkingId = `assistant-thinking-${Date.now()}`
+    const assistantId = `assistant-${Date.now()}`
+    let streamRaf = null
+    let pendingStreamText = ''
     setIaMessages((prev) => [
       ...prev,
       {
@@ -327,25 +376,54 @@ export default function ClientsHome() {
       },
     ])
 
-    try {
-      const response = await queryClaudeClient({
-        cliente_id: iaClienteId,
-        prompt: text,
-        accion: 'resumen_cliente',
-        include_fathom: iaIncludeFathom,
-        include_discord: iaIncludeDiscord,
-        include_onboarding: iaIncludeOnboarding,
-      })
-      const assistantId = `assistant-${Date.now()}`
-      const assistantMessage = {
-        id: assistantId,
-        role: 'assistant',
-        content: '',
-        usage: null,
+    function cancelStreamRaf() {
+      if (streamRaf != null) {
+        cancelAnimationFrame(streamRaf)
+        streamRaf = null
       }
-      setIaMessages((prev) =>
-        prev.map((msg) => (msg.id === thinkingId ? assistantMessage : msg)),
+    }
+
+    function scheduleStreamFlush(full) {
+      pendingStreamText = full
+      if (streamRaf != null) return
+      streamRaf = requestAnimationFrame(() => {
+        streamRaf = null
+        const next = pendingStreamText
+        setIaMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === thinkingId
+              ? {
+                  id: assistantId,
+                  role: 'assistant',
+                  content: next,
+                  usage: null,
+                  streaming: true,
+                }
+              : msg.id === assistantId
+                ? { ...msg, content: next, streaming: true }
+                : msg,
+          ),
+        )
+      })
+    }
+
+    try {
+      const response = await queryClaudeClientStream(
+        {
+          cliente_id: iaClienteId,
+          area: iaArea,
+          prompt: text,
+          include_fathom: iaIncludeFathom,
+          include_discord: iaIncludeDiscord,
+          include_onboarding: iaIncludeOnboarding,
+        },
+        {
+          onDelta: (_chunk, full) => {
+            scheduleStreamFlush(full)
+          },
+        },
       )
+      cancelStreamRaf()
       const usage = {
         model: response?.model ?? null,
         inputTokens: response?.input_tokens ?? null,
@@ -355,8 +433,27 @@ export default function ClientsHome() {
         costUsd: Number(response?.cost_usd ?? 0),
       }
       setUsageRefreshTick((v) => v + 1)
-      await typeAssistantMessage(assistantId, response?.text?.trim() || 'Claude no devolvió contenido.', usage)
+      const finalText =
+        (response?.text && String(response.text).trim()) || 'Claude no devolvió contenido.'
+      setIaMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.id === assistantId) {
+            return { ...msg, content: finalText, usage, streaming: false }
+          }
+          if (msg.id === thinkingId) {
+            return {
+              id: assistantId,
+              role: 'assistant',
+              content: finalText,
+              usage,
+              streaming: false,
+            }
+          }
+          return msg
+        }),
+      )
     } catch (err) {
+      cancelStreamRaf()
       const assistantMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
@@ -379,7 +476,7 @@ export default function ClientsHome() {
     let cancelled = false
     ;(async () => {
       try {
-        const data = await getClaudeClientQuerySystemInstruction()
+        const data = await getClaudeClientQuerySystemInstruction(iaArea)
         if (cancelled) return
         setIaSystemInstruction(
           data?.system_instruction?.trim() || 'No se pudo leer la instrucción del sistema.',
@@ -391,6 +488,55 @@ export default function ClientsHome() {
             ? `No se pudo cargar la instrucción del sistema: ${err.message}`
             : 'No se pudo cargar la instrucción del sistema.',
         )
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [activeView, iaArea])
+
+  useEffect(() => {
+    if (!iaClienteListOpen) return
+    function onDocDown(ev) {
+      if (iaClienteComboRef.current && !iaClienteComboRef.current.contains(ev.target)) {
+        setIaClienteListOpen(false)
+      }
+    }
+    function onKey(ev) {
+      if (ev.key === 'Escape') setIaClienteListOpen(false)
+    }
+    document.addEventListener('mousedown', onDocDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDocDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [iaClienteListOpen])
+
+  useEffect(() => {
+    if (activeView !== 'ia-config') return
+    let cancelled = false
+    ;(async () => {
+      setIaConfigLoading(true)
+      setIaConfigMsg('')
+      try {
+        const data = await getClaudeAreaPrompts()
+        if (cancelled) return
+        const next = { venta: '', cliente: '', marketing: '' }
+        for (const it of data?.items || []) {
+          if (it?.area && typeof it.instruction === 'string') {
+            next[it.area] = it.instruction
+          }
+        }
+        setIaConfigPrompts(next)
+      } catch (err) {
+        if (!cancelled) {
+          setIaConfigMsg(
+            err instanceof Error ? err.message : 'No se pudieron cargar las instrucciones.',
+          )
+        }
+      } finally {
+        if (!cancelled) setIaConfigLoading(false)
       }
     })()
     return () => {
@@ -466,6 +612,107 @@ export default function ClientsHome() {
         )
       }
     })()
+  }
+
+  async function handleSaveIaConfig(e) {
+    e.preventDefault()
+    setIaConfigSaving(true)
+    setIaConfigMsg('')
+    try {
+      const data = await putClaudeAreaPrompts({
+        items: [
+          { area: 'venta', instruction: iaConfigPrompts.venta },
+          { area: 'cliente', instruction: iaConfigPrompts.cliente },
+          { area: 'marketing', instruction: iaConfigPrompts.marketing },
+        ],
+      })
+      const next = { venta: '', cliente: '', marketing: '' }
+      for (const it of data?.items || []) {
+        if (it?.area && typeof it.instruction === 'string') {
+          next[it.area] = it.instruction
+        }
+      }
+      setIaConfigPrompts(next)
+      setIaConfigMsg('Cambios guardados. Se usarán en las consultas Claude por cliente.')
+    } catch (err) {
+      setIaConfigMsg(
+        err instanceof Error ? err.message : 'No se pudo guardar la configuración.',
+      )
+    } finally {
+      setIaConfigSaving(false)
+    }
+  }
+
+  function renderIaConfigView() {
+    return (
+      <>
+        <header className="clients-content__header">
+          <h2>Configuración</h2>
+          <p className="module-lead">
+            Editá el system prompt que recibe Claude para cada área (Venta, Cliente, Marketing). Los textos se
+            guardan en el servidor y aplican al chat de Claude ATV.
+          </p>
+        </header>
+
+        <section className="clients-panel clients-panel--ia-config">
+          {iaConfigLoading ? (
+            <p className="clients-ia-config__status">Cargando…</p>
+          ) : (
+            <form className="clients-ia-config-form" onSubmit={handleSaveIaConfig}>
+              <div className="clients-ia-config-block">
+                <label className="clients-ia-config-label" htmlFor="ia-prompt-venta">
+                  Área Venta
+                </label>
+                <textarea
+                  id="ia-prompt-venta"
+                  className="clients-ia-config-textarea"
+                  rows={10}
+                  value={iaConfigPrompts.venta}
+                  onChange={(e) => setIaConfigPrompts((p) => ({ ...p, venta: e.target.value }))}
+                  spellCheck="false"
+                />
+              </div>
+              <div className="clients-ia-config-block">
+                <label className="clients-ia-config-label" htmlFor="ia-prompt-cliente">
+                  Área Cliente
+                </label>
+                <textarea
+                  id="ia-prompt-cliente"
+                  className="clients-ia-config-textarea"
+                  rows={10}
+                  value={iaConfigPrompts.cliente}
+                  onChange={(e) => setIaConfigPrompts((p) => ({ ...p, cliente: e.target.value }))}
+                  spellCheck="false"
+                />
+              </div>
+              <div className="clients-ia-config-block">
+                <label className="clients-ia-config-label" htmlFor="ia-prompt-marketing">
+                  Área Marketing
+                </label>
+                <textarea
+                  id="ia-prompt-marketing"
+                  className="clients-ia-config-textarea"
+                  rows={10}
+                  value={iaConfigPrompts.marketing}
+                  onChange={(e) => setIaConfigPrompts((p) => ({ ...p, marketing: e.target.value }))}
+                  spellCheck="false"
+                />
+              </div>
+              {iaConfigMsg ? (
+                <p className={iaConfigMsg.includes('guardad') ? 'clients-ia-config__msg clients-ia-config__msg--ok' : 'clients-ia-config__msg'} role="status">
+                  {iaConfigMsg}
+                </p>
+              ) : null}
+              <div className="clients-ia-config-actions">
+                <button type="submit" className="login-submit" disabled={iaConfigSaving}>
+                  {iaConfigSaving ? 'Guardando…' : 'Guardar instrucciones'}
+                </button>
+              </div>
+            </form>
+          )}
+        </section>
+      </>
+    )
   }
 
   function renderDashboardView() {
@@ -1726,10 +1973,18 @@ export default function ClientsHome() {
             </button>
           </nav>
 
-
-          <Link to="/dashboard" className="clients-sidebar__back">
-            ← Volver al panel
-          </Link>
+          <div className="clients-sidebar__footer">
+            <button
+              type="button"
+              className={`clients-sidebar__item${activeView === 'ia-config' ? ' clients-sidebar__item--active' : ''}`}
+              onClick={() => setActiveView('ia-config')}
+            >
+              Configuración
+            </button>
+            <Link to="/dashboard" className="clients-sidebar__back">
+              ← Volver al panel
+            </Link>
+          </div>
         </aside>
 
         <section className="clients-content">
@@ -1751,7 +2006,10 @@ export default function ClientsHome() {
             ? renderClientesView()
             : activeView === 'entregables'
             ? <EntregablesPlantillaEditor />
-            : (
+            : activeView === 'ia-config'
+            ? renderIaConfigView()
+            : activeView === 'ia'
+            ? (
                 <>
                   <header className="clients-content__header">
                     <h2>IA</h2>
@@ -1766,23 +2024,86 @@ export default function ClientsHome() {
 
                         <div className="clients-ia-section">
                           <h4>Cliente objetivo</h4>
+                          <div
+                            ref={iaClienteComboRef}
+                            className="clients-ia-combobox"
+                            role="combobox"
+                            aria-expanded={iaClienteListOpen && iaClienteSearch.trim().length > 0}
+                            aria-haspopup="listbox"
+                          >
+                            <input
+                              id="ia-cliente-search"
+                              type="search"
+                              autoComplete="off"
+                              spellCheck="false"
+                              className="clients-ia-combobox__input"
+                              aria-label="Buscar o elegir cliente"
+                              placeholder="Nombre, programa, estado, código…"
+                              value={iaClienteSearch}
+                              onChange={handleIaClienteSearchChange}
+                              onFocus={() => setIaClienteListOpen(true)}
+                              aria-controls="ia-cliente-listbox"
+                              aria-autocomplete="list"
+                            />
+                            {iaClienteListOpen && iaClienteSearch.trim() ? (
+                              <ul
+                                id="ia-cliente-listbox"
+                                className="clients-ia-combobox__list"
+                                role="listbox"
+                                aria-label="Clientes que coinciden"
+                              >
+                                {iaClientesFiltered.length ? (
+                                  iaClientesFiltered.map((c) => (
+                                    <li key={String(c.id)} role="none">
+                                      <button
+                                        type="button"
+                                        role="option"
+                                        aria-selected={String(c.id) === String(iaClienteId)}
+                                        className="clients-ia-combobox__option"
+                                        onMouseDown={(ev) => ev.preventDefault()}
+                                        onClick={() => handlePickIaCliente(c)}
+                                      >
+                                        <span className="clients-ia-combobox__option-name">
+                                          {clientDisplayName(c)}
+                                        </span>
+                                        <span className="clients-ia-combobox__option-meta">
+                                          {[c.programa, c.estado].filter(Boolean).join(' · ')}
+                                          {c.codigo_publico != null ? ` · #${c.codigo_publico}` : ''}
+                                        </span>
+                                      </button>
+                                    </li>
+                                  ))
+                                ) : (
+                                  <li className="clients-ia-combobox__empty" role="presentation">
+                                    No hay coincidencias.
+                                  </li>
+                                )}
+                              </ul>
+                            ) : null}
+                          </div>
+                          {iaClienteId ? (
+                            <p className="clients-ia-params__hint clients-ia-params__hint--scope clients-ia-combobox__selected">
+                              Cliente seleccionado: <strong>{iaClienteSeleccionLabel}</strong>
+                            </p>
+                          ) : null}
+                        </div>
+
+                        <div className="clients-ia-section">
+                          <h4>Área / rol</h4>
                           <label className="clients-ia-select-wrap">
-                            <span className="visually-hidden">Seleccionar cliente para consultas IA</span>
+                            <span className="visually-hidden">Área ATV para instrucciones de sistema</span>
                             <select
                               className="clients-ia-select"
-                              value={iaClienteId}
-                              onChange={(e) => setIaClienteId(e.target.value)}
+                              value={iaArea}
+                              onChange={(e) => setIaArea(e.target.value)}
                             >
-                              <option value="">Seleccionar cliente…</option>
-                              {clientes.map((cliente) => (
-                                <option key={cliente.id} value={String(cliente.id)}>
-                                  {[cliente.nombre, cliente.apellido].filter(Boolean).join(' ')}
-                                </option>
-                              ))}
+                              <option value="cliente">Área Cliente (éxito / operación)</option>
+                              <option value="venta">Área Venta</option>
+                              <option value="marketing">Área Marketing</option>
                             </select>
                           </label>
                           <p className="clients-ia-params__hint clients-ia-params__hint--scope">
-                            La IA buscará solo en la carpeta/contexto de este cliente.
+                            Cambia el system prompt: foco comercial, éxito de cliente o marketing según elijas.
                           </p>
                         </div>
 
@@ -1816,15 +2137,6 @@ export default function ClientsHome() {
                           </div>
                         </div>
 
-                        <div className="clients-ia-section">
-                          <h4>Acción activa</h4>
-                          <div className="clients-ia-chips">
-                            <button type="button" className="clients-ia-chip clients-ia-chip--on">
-                              Generar resumen del cliente
-                            </button>
-                          </div>
-                        </div>
-
                         <div className="clients-ia-section clients-ia-section--system">
                           <h4>Instrucciones del sistema</h4>
                           <p className="clients-ia-params__system">
@@ -1852,6 +2164,10 @@ export default function ClientsHome() {
                                     <span className="clients-ia-thinking__dot" />
                                     <span className="clients-ia-thinking__dot" />
                                     <span className="clients-ia-thinking__dot" />
+                                  </div>
+                                ) : msg.streaming ? (
+                                  <div className="clients-ia-msg__content clients-ia-msg__content--stream">
+                                    {msg.content}
                                   </div>
                                 ) : (
                                   <div className="clients-ia-msg__content">{renderIaContent(msg.content)}</div>
@@ -1899,7 +2215,8 @@ export default function ClientsHome() {
                     </div>
                   </section>
                 </>
-              )}
+              )
+            : null}
         </section>
       </main>
     </div>

@@ -69,8 +69,16 @@ class ClaudeTestRequest(BaseModel):
         max_length=50_000,
         description="Instrucciones de sistema opcionales.",
     )
-    model: str | None = Field(default=None, description="Modelo; por defecto ANTHROPIC_MODEL del .env.")
-    max_tokens: int = Field(default=1024, ge=1, le=16_000)
+    model: str | None = Field(
+        default=None,
+        description="Modelo de API Claude (p. ej. claude-opus-4-7); por defecto ANTHROPIC_MODEL del .env.",
+    )
+    max_tokens: int = Field(
+        default=21_333,
+        ge=1,
+        le=21_333,
+        description="Máximo de tokens de salida sin streaming (SDK Anthropic ~21k; por encima exige streaming).",
+    )
 
 
 class ClaudeClientContextRequest(BaseModel):
@@ -83,17 +91,20 @@ class ClaudeClientQueryRequest(BaseModel):
     """Consulta de Claude acotada a un cliente y fuentes seleccionadas."""
 
     cliente_id: UUID
+    area: Literal["venta", "cliente", "marketing"] = Field(
+        default="cliente",
+        description="Área ATV: ajusta el system prompt (tono y foco: venta, éxito de cliente o marketing).",
+    )
     prompt: str = Field(min_length=1, max_length=20_000)
-    accion: Literal[
-        "resumen_cliente",
-        "puntos_criticos",
-        "proximos_pasos",
-        "riesgos_bloqueos",
-    ] = "resumen_cliente"
     include_fathom: bool = True
     include_discord: bool = True
     include_onboarding: bool = True
-    max_tokens: int = Field(default=2048, ge=1, le=16_000)
+    max_tokens: int = Field(
+        default=16_384,
+        ge=1,
+        le=64_000,
+        description="Máximo de tokens de salida (chat ATV usa streaming; ~16k por defecto, techo 64k).",
+    )
 
 
 class ClaudeGenerationResponse(BaseModel):
@@ -103,6 +114,39 @@ class ClaudeGenerationResponse(BaseModel):
     input_tokens: int | None = None
     output_tokens: int | None = None
     cost_usd: float | None = None
+
+
+class ClaudeAreaPromptItem(BaseModel):
+    """Un system prompt asociado a un área ATV."""
+
+    area: Literal["venta", "cliente", "marketing"]
+    instruction: str = Field(min_length=1, max_length=50_000)
+
+    @field_validator("instruction")
+    @classmethod
+    def instruction_strip(cls, v: str) -> str:
+        s = (v or "").strip()
+        if not s:
+            raise ValueError("La instrucción no puede estar vacía.")
+        return s
+
+
+class ClaudeAreaPromptsResponse(BaseModel):
+    items: list[ClaudeAreaPromptItem]
+
+
+class ClaudeAreaPromptsUpdateRequest(BaseModel):
+    items: list[ClaudeAreaPromptItem] = Field(min_length=1, max_length=10)
+
+    @field_validator("items")
+    @classmethod
+    def unique_areas(cls, v: list[ClaudeAreaPromptItem]) -> list[ClaudeAreaPromptItem]:
+        seen: set[str] = set()
+        for it in v:
+            if it.area in seen:
+                raise ValueError("No repetir el mismo área en el mismo guardado.")
+            seen.add(it.area)
+        return v
 
 
 class ClaudeBalanceUpdateRequest(BaseModel):

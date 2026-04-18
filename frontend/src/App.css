@@ -642,7 +642,7 @@
 }
 
 .clients-sidebar--collapsed .clients-sidebar__nav,
-.clients-sidebar--collapsed .clients-sidebar__back {
+.clients-sidebar--collapsed .clients-sidebar__footer {
   display: none;
 }
 
@@ -753,8 +753,15 @@
   color: #f2f0f7;
 }
 
-.clients-sidebar__back {
+.clients-sidebar__footer {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.clients-sidebar__back {
+  margin-top: 0;
   font-size: 0.83rem;
   color: #ff9daa;
   text-decoration: none;
@@ -825,30 +832,6 @@
   color: rgba(242, 240, 247, 0.9);
 }
 
-.clients-ia-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.clients-ia-chip {
-  font-family: inherit;
-  font-size: 0.75rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  padding: 0.24rem 0.6rem;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(242, 240, 247, 0.9);
-  cursor: pointer;
-}
-
-.clients-ia-chip--on {
-  border-color: rgba(255, 61, 77, 0.6);
-  background: radial-gradient(120% 220% at 0% 0%, rgba(255, 61, 77, 0.35), transparent 55%),
-    rgba(255, 255, 255, 0.08);
-  color: #ffd2d8;
-}
-
 .clients-ia-switch-row {
   display: flex;
   flex-direction: column;
@@ -868,6 +851,86 @@
   padding: 0.5rem 0.62rem;
   font-size: 0.82rem;
   font-family: inherit;
+}
+
+.clients-ia-combobox {
+  position: relative;
+}
+
+.clients-ia-combobox__input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.55rem;
+  background: rgba(8, 8, 10, 0.96);
+  color: #f2f0f7;
+  padding: 0.5rem 0.62rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+}
+
+.clients-ia-combobox__input:focus {
+  outline: 2px solid rgba(255, 61, 77, 0.45);
+  outline-offset: 1px;
+}
+
+.clients-ia-combobox__list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.25rem);
+  z-index: 20;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  max-height: 14rem;
+  overflow-y: auto;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(14, 14, 18, 0.98);
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.45);
+}
+
+.clients-ia-combobox__option {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0.45rem 0.65rem;
+  color: rgba(242, 240, 247, 0.92);
+  font-size: 0.8rem;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  align-items: flex-start;
+}
+
+.clients-ia-combobox__option:hover,
+.clients-ia-combobox__option:focus-visible {
+  background: rgba(255, 61, 77, 0.12);
+  outline: none;
+}
+
+.clients-ia-combobox__option-name {
+  font-weight: 600;
+}
+
+.clients-ia-combobox__option-meta {
+  font-size: 0.72rem;
+  color: rgba(242, 240, 247, 0.55);
+}
+
+.clients-ia-combobox__empty {
+  padding: 0.55rem 0.65rem;
+  font-size: 0.78rem;
+  color: rgba(242, 240, 247, 0.55);
+  list-style: none;
+}
+
+.clients-ia-combobox__selected {
+  margin-top: 0.35rem;
 }
 
 .clients-ia-params__hint--scope {
@@ -895,6 +958,68 @@
   font-size: 0.78rem;
   line-height: 1.45;
   color: rgba(242, 240, 247, 0.8);
+}
+
+.clients-panel--ia-config {
+  max-width: 52rem;
+}
+
+.clients-ia-config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.clients-ia-config-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.clients-ia-config-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(242, 240, 247, 0.92);
+}
+
+.clients-ia-config-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 8rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 8, 10, 0.92);
+  color: rgba(242, 240, 247, 0.95);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  resize: vertical;
+}
+
+.clients-ia-config-textarea:focus {
+  outline: 2px solid rgba(255, 61, 77, 0.45);
+  outline-offset: 1px;
+}
+
+.clients-ia-config-actions {
+  margin-top: 0.25rem;
+}
+
+.clients-ia-config__status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(242, 240, 247, 0.75);
+}
+
+.clients-ia-config__msg {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #ffb4a8;
+}
+
+.clients-ia-config__msg--ok {
+  color: #9fe8c3;
 }
 
 .clients-ia-chat {
@@ -991,6 +1116,11 @@
   color: rgba(242, 240, 247, 0.95);
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Durante el stream: un solo nodo de texto (sin parsear líneas) para mantener 60fps fluidos. */
+.clients-ia-msg__content--stream {
+  contain: content;
 }
 
 .clients-ia-msg__usage {

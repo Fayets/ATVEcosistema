@@ -38,6 +38,7 @@ function getTotalUsageSpentUsd() {
 function getModelRatesPerMillion(model) {
   const m = String(model || '').toLowerCase()
   if (m.includes('haiku')) return { input: 0.8, output: 4.0 }
+  if (m.includes('opus-4-7')) return { input: 5.0, output: 25.0 }
   if (m.includes('opus')) return { input: 15.0, output: 75.0 }
   return { input: 3.0, output: 15.0 }
 }
@@ -449,8 +450,108 @@ export async function queryClaudeClient(payload) {
   return parseResponse(res, 'No se pudo consultar Claude para este cliente.')
 }
 
-export async function getClaudeClientQuerySystemInstruction() {
-  const res = await fetch(`${API_BASE}/claude/clients/query/system-instruction`, {
+/**
+ * Consulta Claude por cliente con streaming NDJSON (experiencia tipo chat).
+ * @param {object} payload mismo cuerpo que queryClaudeClient
+ * @param {{ onDelta?: (chunk: string, accumulated: string) => void, signal?: AbortSignal }} [options]
+ * @returns {Promise<{ text: string, model: string, stop_reason: string | null, input_tokens: number, output_tokens: number, cost_usd: number }>}
+ */
+export async function queryClaudeClientStream(payload, options = {}) {
+  const { onDelta, signal } = options
+  const res = await fetch(`${API_BASE}/claude/clients/query/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify(payload),
+    signal,
+  })
+  if (res.status === 429) {
+    throw new Error('Límite de uso de Anthropic; reintentá más tarde.')
+  }
+  if (!res.ok) {
+    return await parseResponse(res, 'No se pudo consultar Claude para este cliente.')
+  }
+  const reader = res.body?.getReader()
+  if (!reader) {
+    throw new Error('El navegador no soporta lectura del cuerpo de la respuesta.')
+  }
+  const dec = new TextDecoder()
+  let buf = ''
+  let accumulated = ''
+  let donePayload = null
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buf += dec.decode(value, { stream: true })
+    const parts = buf.split('\n')
+    buf = parts.pop() ?? ''
+    for (const line of parts) {
+      const s = line.trim()
+      if (!s) continue
+      let ev
+      try {
+        ev = JSON.parse(s)
+      } catch {
+        continue
+      }
+      if (ev.type === 'delta' && typeof ev.text === 'string') {
+        accumulated += ev.text
+        onDelta?.(ev.text, accumulated)
+      } else if (ev.type === 'done') {
+        donePayload = ev
+      } else if (ev.type === 'error') {
+        throw new Error(ev.detail || 'Error en el stream de Claude.')
+      }
+    }
+  }
+  const tail = buf.trim()
+  if (tail) {
+    try {
+      const ev = JSON.parse(tail)
+      if (ev.type === 'done') donePayload = ev
+      if (ev.type === 'error') throw new Error(ev.detail || 'Error en el stream de Claude.')
+    } catch (e) {
+      if (e instanceof Error && e.message.startsWith('Error en')) throw e
+    }
+  }
+  if (!donePayload) {
+    throw new Error('La respuesta de Claude terminó sin evento de cierre.')
+  }
+  return {
+    text: String(donePayload.text ?? '').trim(),
+    model: donePayload.model ?? null,
+    stop_reason: donePayload.stop_reason ?? null,
+    input_tokens: Number(donePayload.input_tokens ?? 0),
+    output_tokens: Number(donePayload.output_tokens ?? 0),
+    cost_usd: Number(donePayload.cost_usd ?? 0),
+  }
+}
+
+/** @param {string} [area] venta | cliente | marketing */
+export async function getClaudeAreaPrompts() {
+  const res = await fetch(`${API_BASE}/claude/area-prompts`, {
+    headers: { ...authHeaders() },
+  })
+  return parseResponse(res, 'No se pudieron cargar las instrucciones por área.')
+}
+
+export async function putClaudeAreaPrompts(body) {
+  const res = await fetch(`${API_BASE}/claude/area-prompts`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify(body),
+  })
+  return parseResponse(res, 'No se pudieron guardar las instrucciones por área.')
+}
+
+export async function getClaudeClientQuerySystemInstruction(area = 'cliente') {
+  const q = new URLSearchParams({ area: String(area || 'cliente') })
+  const res = await fetch(`${API_BASE}/claude/clients/query/system-instruction?${q}`, {
     headers: { ...authHeaders() },
   })
   return parseResponse(res, 'No se pudo obtener la instrucción del sistema de Claude.')
