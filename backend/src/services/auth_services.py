@@ -14,7 +14,7 @@ JWT_EXPIRE_HOURS = 24
 
 
 def _issue_token(user_id: int, username: str, role: str) -> str:
-    secret = config("SECRET")
+    secret = config("SECRET_KEY")
     now = datetime.now(timezone.utc)
     payload = {
         "sub": str(user_id),
