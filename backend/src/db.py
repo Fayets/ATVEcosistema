@@ -3,13 +3,32 @@ from decouple import config
 import psycopg2
 
 db = Database()
-db.bind(
+
+_bind_kw = dict(
     provider=config("DB_PROVIDER"),
     user=config("DB_USER"),
     password=config("DB_PASS"),
     host=config("DB_HOST"),
     database=config("DB_NAME"),
 )
+# Neon y otros Postgres gestionados suelen exigir TLS (p. ej. DB_SSLMODE=require).
+_db_sslmode = (config("DB_SSLMODE", default="") or "").strip()
+if _db_sslmode:
+    _bind_kw["sslmode"] = _db_sslmode
+db.bind(**_bind_kw)
+
+
+def _psycopg2_connect_kwargs() -> dict:
+    kw = dict(
+        user=config("DB_USER"),
+        password=config("DB_PASS"),
+        host=config("DB_HOST"),
+        dbname=config("DB_NAME"),
+    )
+    sslmode = (config("DB_SSLMODE", default="") or "").strip()
+    if sslmode:
+        kw["sslmode"] = sslmode
+    return kw
 
 
 def _run_postgres_schema_patches() -> None:
@@ -17,12 +36,7 @@ def _run_postgres_schema_patches() -> None:
     if provider not in {"postgres", "postgresql"}:
         return
 
-    conn = psycopg2.connect(
-        user=config("DB_USER"),
-        password=config("DB_PASS"),
-        host=config("DB_HOST"),
-        dbname=config("DB_NAME"),
-    )
+    conn = psycopg2.connect(**_psycopg2_connect_kwargs())
     try:
         with conn:
             with conn.cursor() as cur:
@@ -129,12 +143,7 @@ def _migrate_legacy_onboarding_plantilla_to_entregable() -> None:
     if provider not in {"postgres", "postgresql"}:
         return
 
-    conn = psycopg2.connect(
-        user=config("DB_USER"),
-        password=config("DB_PASS"),
-        host=config("DB_HOST"),
-        dbname=config("DB_NAME"),
-    )
+    conn = psycopg2.connect(**_psycopg2_connect_kwargs())
     try:
         with conn:
             with conn.cursor() as cur:

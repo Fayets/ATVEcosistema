@@ -1,0 +1,14 @@
+#!/bin/sh
+# Salvaguarda: requirements del backend presente y no vacío.
+# Activación (una vez por clon): git config core.hooksPath git-hooks
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+REQ="$ROOT/backend/requirements.txt"
+if [ ! -f "$REQ" ]; then
+  echo "pre-commit: falta $REQ" >&2
+  exit 1
+fi
+if [ ! -s "$REQ" ]; then
+  echo "pre-commit: $REQ está vacío" >&2
+  exit 1
+fi
+exit 0
