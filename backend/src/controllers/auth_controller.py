@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from src.deps import (
-    SESSION_COOKIE_NAME,
-    SESSION_COOKIE_SECURE,
     SESSION_MAX_AGE_SECONDS,
     get_current_username,
+    session_cookie_params,
 )
 from src.schemas import LoginRequest, SessionResponse
 from src.services.auth_services import AuthServices
@@ -18,13 +17,9 @@ def login(body: LoginRequest, response: Response) -> SessionResponse:
     try:
         session, token = _service.login(body)
         response.set_cookie(
-            key=SESSION_COOKIE_NAME,
+            **session_cookie_params(),
             value=token,
             max_age=SESSION_MAX_AGE_SECONDS,
-            httponly=True,
-            secure=SESSION_COOKIE_SECURE,
-            samesite="lax",
-            path="/",
         )
         return session
     except HTTPException as e:
@@ -45,5 +40,5 @@ def get_session(username: str = Depends(get_current_username)) -> SessionRespons
 
 @router.post("/logout")
 def logout(response: Response) -> dict[str, str]:
-    response.delete_cookie(key=SESSION_COOKIE_NAME, path="/")
+    response.delete_cookie(**session_cookie_params())
     return {"detail": "Sesión cerrada."}
