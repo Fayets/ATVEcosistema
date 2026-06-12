@@ -49,19 +49,17 @@ def _ensure_ecosystem_schema() -> None:
 
 
 def _seed_default_user() -> None:
-    from passlib.context import CryptContext
     from pony.orm import db_session
 
     from src.models import User
-
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    from src.password_utils import hash_password
 
     with db_session:
         if User.select().count() > 0:
             return
         User(
             username="franco",
-            password_hash=pwd_context.hash("franco"),
+            password_hash=hash_password("franco"),
         )
 
 
