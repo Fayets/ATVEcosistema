@@ -17,7 +17,6 @@ _bind_kw = dict(
 _db_sslmode = (config("DB_SSLMODE", default="") or "").strip()
 if _db_sslmode:
     _bind_kw["sslmode"] = _db_sslmode
-_bind_kw["options"] = f"-c search_path={DB_SCHEMA},public"
 db.bind(**_bind_kw)
 
 

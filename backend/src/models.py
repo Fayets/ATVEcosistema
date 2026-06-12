@@ -4,11 +4,11 @@ from uuid import UUID
 
 from pony.orm import PrimaryKey, Required
 
-from src.db import db
+from src.db import DB_SCHEMA, db
 
 
 class User(db.Entity):
-    _table_ = "users"
+    _table_ = (DB_SCHEMA, "users")
 
     id = PrimaryKey(UUID, default=uuid.uuid4)
     username = Required(str, unique=True)
