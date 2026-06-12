@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { loginRequest } from '../api.js'
+import { getSession, loginRequest } from '../api.js'
 import { GIT_COMMIT_SHORT } from '../buildInfo.js'
 
 function IconUser() {
@@ -31,23 +31,44 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    getSession()
+      .then(() => {
+        if (!cancelled) navigate('/dashboard', { replace: true })
+      })
+      .catch(() => {
+        if (!cancelled) setCheckingSession(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [navigate])
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const data = await loginRequest(username.trim(), password)
-      sessionStorage.setItem('atv_token', data.access_token)
-      if (data.user) {
-        sessionStorage.setItem('atv_user', JSON.stringify(data.user))
-      }
+      await loginRequest(username.trim(), password)
       navigate('/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión.')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkingSession) {
+    return (
+      <div className="login-page">
+        <main className="login-main">
+          <p className="module-lead">Verificando sesión…</p>
+        </main>
+      </div>
+    )
   }
 
   return (

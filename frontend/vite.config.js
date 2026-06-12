@@ -16,4 +16,16 @@ export default defineConfig({
   define: {
     __GIT_COMMIT_SHORT__: JSON.stringify(gitCommitShort()),
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/health': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+    },
+  },
 })

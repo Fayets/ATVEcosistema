@@ -1,12 +1,21 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { logoutRequest } from '../api.js'
 import { dashboardTiles } from '../modules/registry.js'
+
+function tileHref(tile) {
+  if (tile.hubPath) return tile.hubPath
+  return `/m/${tile.path}`
+}
 
 export default function DashboardPage() {
   const navigate = useNavigate()
 
-  function handleLogout() {
-    sessionStorage.removeItem('atv_token')
-    sessionStorage.removeItem('atv_user')
+  async function handleLogout() {
+    try {
+      await logoutRequest()
+    } catch {
+      /* cookie puede estar ya ausente */
+    }
     navigate('/', { replace: true })
   }
 
@@ -31,13 +40,16 @@ export default function DashboardPage() {
 
         <nav className="dashboard-grid" aria-label="Módulos ATV">
           {dashboardTiles.map((tile) => {
-            const to = `/m/${tile.path}`
-            const isPlaceholder = tile.type === 'placeholder'
+            const to = tileHref(tile)
+            const isPending = tile.status === 'por_construir'
             return (
               <Link
                 key={tile.id}
                 to={to}
-                className={`dashboard-tile${isPlaceholder ? ' dashboard-tile--placeholder' : ''}`}
+                className={`dashboard-tile${isPending ? ' dashboard-tile--pending' : ''}`}
+                aria-label={
+                  isPending ? `${tile.label} (por construir)` : tile.label
+                }
               >
                 <div className="dashboard-tile__media">
                   {tile.image ? (

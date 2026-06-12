@@ -4,14 +4,21 @@ import './App.css'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
-import OnboardingPage from './pages/OnboardingPage.jsx'
+import OnboardingEmbedPage from './pages/OnboardingEmbedPage.jsx'
 
 const ClientsHome = lazy(() => import('./modules/clients/ClientsHome.jsx'))
 const FinanzasHome = lazy(() => import('./modules/finanzas/FinanzasHome.jsx'))
 const ProductoHome = lazy(() => import('./modules/producto/ProductoHome.jsx'))
 const VentasHome = lazy(() => import('./modules/ventas/VentasHome.jsx'))
 const MarketingHome = lazy(() => import('./modules/marketing/MarketingHome.jsx'))
-const ProximoModulo = lazy(() => import('./modules/placeholder/ProximoModulo.jsx'))
+const DiscordShell = lazy(() => import('./modules/discord/DiscordShell.jsx'))
+const DiscordDashboard = lazy(() => import('./modules/discord/DiscordDashboard.jsx'))
+const DiscordTickets = lazy(() => import('./modules/discord/DiscordTickets.jsx'))
+const DiscordTicketDetail = lazy(() => import('./modules/discord/DiscordTicketDetail.jsx'))
+const DiscordMetrics = lazy(() => import('./modules/discord/DiscordMetrics.jsx'))
+const DiscordSettings = lazy(() => import('./modules/discord/DiscordSettings.jsx'))
+const OnboardingHome = lazy(() => import('./modules/onboarding/OnboardingHome.jsx'))
+const DocsHome = lazy(() => import('./modules/docs/DocsHome.jsx'))
 
 function RouteFallback() {
   return (
@@ -31,7 +38,14 @@ export default function App() {
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<LoginPage />} />
-          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingEmbedPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={
@@ -82,13 +96,38 @@ export default function App() {
             }
           />
           <Route
-            path="/m/proximo/:slot"
+            path="/m/discord"
             element={
               <ProtectedRoute>
-                <ProximoModulo />
+                <DiscordShell />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<DiscordDashboard />} />
+            <Route path="tickets" element={<DiscordTickets />} />
+            <Route path="tickets/:id" element={<DiscordTicketDetail />} />
+            <Route path="metrics" element={<DiscordMetrics />} />
+            <Route path="settings" element={<DiscordSettings />} />
+          </Route>
+          <Route
+            path="/m/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingHome />
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/m/docs"
+            element={
+              <ProtectedRoute>
+                <DocsHome />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/m/proximo/1" element={<Navigate to="/m/onboarding" replace />} />
+          <Route path="/m/proximo/2" element={<Navigate to="/m/docs" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

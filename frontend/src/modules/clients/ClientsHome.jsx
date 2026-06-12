@@ -996,7 +996,7 @@ export default function ClientsHome() {
     }
   }
 
-  function handleEditCliente(cliente) {
+  function _handleEditCliente(cliente) {
     setClienteEditingId(cliente.id)
     setClienteForm({
       nombre: cliente.nombre ?? '',

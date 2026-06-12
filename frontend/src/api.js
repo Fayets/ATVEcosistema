@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 const CLAUDE_USAGE_STORAGE_KEY = 'atv_claude_usage_v1'
 const CLAUDE_BALANCE_STORAGE_KEY = 'atv_claude_balance_v1'
 
@@ -11,8 +11,45 @@ function detailMessage(detail) {
   return 'Error al iniciar sesión'
 }
 
+async function parseResponse(res, fallbackMessage) {
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(detailMessage(data.detail) || fallbackMessage)
+  }
+  return data
+}
+
+/** Sesión por cookie httpOnly (`ecosystem_session`). */
+export async function loginRequest(username, password) {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ username, password }),
+  })
+  return parseResponse(res, 'No se pudo iniciar sesión.')
+}
+
+export async function getSession() {
+  const res = await fetch(`${API_BASE}/api/auth/session`, {
+    credentials: 'include',
+  })
+  if (res.status === 401) {
+    throw new Error('No autenticado')
+  }
+  return parseResponse(res, 'No se pudo validar la sesión.')
+}
+
+export async function logoutRequest() {
+  const res = await fetch(`${API_BASE}/api/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+  return parseResponse(res, 'No se pudo cerrar sesión.')
+}
+
 function authHeaders() {
-  const token = sessionStorage.getItem('atv_token')
+  const token = localStorage.getItem('atv_token') || sessionStorage.getItem('atv_token')
   if (!token) return {}
   return { Authorization: `Bearer ${token}` }
 }
@@ -198,21 +235,52 @@ export async function resetClaudeBalance(balanceUsd) {
   return parseResponse(res, 'No se pudo actualizar el saldo de Claude.')
 }
 
-async function parseResponse(res, fallbackMessage) {
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    throw new Error(detailMessage(data.detail) || fallbackMessage)
-  }
-  return data
+// —— ATV Discord: Tickets API ——
+
+export async function listAreas() {
+  const res = await fetch(`${API_BASE}/api/areas`, { headers: { ...authHeaders() } })
+  return parseResponse(res, 'No se pudieron listar las áreas.')
 }
 
-export async function loginRequest(username, password) {
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
+export async function listStaff() {
+  const res = await fetch(`${API_BASE}/api/staff`, { headers: { ...authHeaders() } })
+  return parseResponse(res, 'No se pudo listar el staff.')
+}
+
+export async function listTickets() {
+  const res = await fetch(`${API_BASE}/api/tickets`, { headers: { ...authHeaders() } })
+  return parseResponse(res, 'No se pudieron listar los tickets.')
+}
+
+export async function getTicketDetail(id) {
+  const res = await fetch(`${API_BASE}/api/tickets/${id}`, { headers: { ...authHeaders() } })
+  return parseResponse(res, 'No se pudo obtener el ticket.')
+}
+
+export async function responderTicket(id, respuesta) {
+  const res = await fetch(`${API_BASE}/api/tickets/${id}/responder`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ respuesta }),
   })
-  return parseResponse(res, 'No se pudo iniciar sesión.')
+  return parseResponse(res, 'No se pudo responder el ticket.')
+}
+
+export async function transferirTicket(id, area_destino_id, nota) {
+  const res = await fetch(`${API_BASE}/api/tickets/${id}/transferir`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ area_destino_id, nota }),
+  })
+  return parseResponse(res, 'No se pudo transferir el ticket.')
+}
+
+export async function cerrarTicket(id) {
+  const res = await fetch(`${API_BASE}/api/tickets/${id}/cerrar`, {
+    method: 'PATCH',
+    headers: { ...authHeaders() },
+  })
+  return parseResponse(res, 'No se pudo cerrar el ticket.')
 }
 
 export async function listClientes({ skip = 0, limit = 50 } = {}) {

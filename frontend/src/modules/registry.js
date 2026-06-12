@@ -4,16 +4,27 @@
  * (`src/modules/<id>/`) para poder habilitar/deshabilitar o empaquetar por cliente.
  *
  * Imagen en cada cuadrícula: logo en `frontend/public/ATVWhite.png`.
+ *
+ * status:
+ *   - `existe` — módulo disponible en el hub
+ *   - `por_construir` — hueco reservado, aún sin producto final
  */
 const TILE_IMAGE = '/ATVWhite.png'
 
 export const dashboardTiles = [
-  { id: 'clientes', path: 'clientes', label: 'ATV CLIENTS', type: 'module', image: TILE_IMAGE },
-  { id: 'finanzas', path: 'finanzas', label: 'ATV FINANZAS', type: 'module', image: TILE_IMAGE },
-  { id: 'producto', path: 'producto', label: 'ATV PRODUCTO', type: 'module', image: TILE_IMAGE },
-  { id: 'ventas', path: 'ventas', label: 'ATV VENTAS', type: 'module', image: TILE_IMAGE },
-  { id: 'marketing', path: 'marketing', label: 'ATV MARKETING', type: 'module', image: TILE_IMAGE },
-  { id: 'proximo-1', path: 'proximo/1', label: '?', type: 'placeholder', image: TILE_IMAGE },
-  { id: 'proximo-2', path: 'proximo/2', label: '?', type: 'placeholder', image: TILE_IMAGE },
-  { id: 'proximo-3', path: 'proximo/3', label: '?', type: 'placeholder', image: TILE_IMAGE },
+  {
+    id: 'onboarding',
+    path: 'onboarding',
+    hubPath: '/onboarding',
+    label: 'ATV ONBOARDING',
+    status: 'existe',
+    image: TILE_IMAGE,
+  },
+  { id: 'clientes', path: 'clientes', label: 'ATV CLIENTS', status: 'existe', image: TILE_IMAGE },
+  { id: 'finanzas', path: 'finanzas', label: 'ATV FINANZAS', status: 'por_construir', image: TILE_IMAGE },
+  { id: 'producto', path: 'producto', label: 'ATV PRODUCTO', status: 'por_construir', image: TILE_IMAGE },
+  { id: 'ventas', path: 'ventas', label: 'ATV VENTAS', status: 'existe', image: TILE_IMAGE },
+  { id: 'marketing', path: 'marketing', label: 'ATV MARKETING', status: 'existe', image: TILE_IMAGE },
+  { id: 'discord', path: 'discord', label: 'ATV DISCORD', status: 'por_construir', image: TILE_IMAGE },
+  { id: 'docs', path: 'docs', label: 'ATV DOCS', status: 'por_construir', image: TILE_IMAGE },
 ]

@@ -4,6 +4,26 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Referencia ATV dashboard: alto contraste, negro casi puro + rojo systémico */
+  --atv-bg: #0d0d0d;
+  --atv-bg-elev: #121212;
+  --atv-surface: #141414;
+  --atv-accent: #ff3b30;
+  --atv-accent-soft: rgba(255, 59, 48, 0.14);
+  --atv-text: #ececec;
+  --atv-muted: #888888;
+  --atv-border-soft: rgba(255, 255, 255, 0.08);
+  --atv-border-accent: rgba(255, 59, 48, 0.22);
+  --atv-font-sans:
+    'Inter',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
 html,
 body,
 #root {
@@ -13,13 +33,11 @@ body,
 }
 
 body {
-  font-family:
-    'DM Sans',
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--atv-font-sans);
+  background-color: var(--atv-bg);
+  color: var(--atv-text);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
