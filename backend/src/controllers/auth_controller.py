@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 
 from src.deps import (
     SESSION_MAX_AGE_SECONDS,
+    clear_session_cookies,
     get_current_username,
     session_cookie_params,
 )
@@ -40,5 +41,5 @@ def get_session(username: str = Depends(get_current_username)) -> SessionRespons
 
 @router.post("/logout")
 def logout(response: Response) -> dict[str, str]:
-    response.delete_cookie(**session_cookie_params())
+    clear_session_cookies(response)
     return {"detail": "Sesión cerrada."}
