@@ -42,15 +42,10 @@ export default function DashboardPage() {
           {dashboardTiles.map((tile) => {
             const to = tileHref(tile)
             const isPending = tile.status === 'por_construir'
-            return (
-              <Link
-                key={tile.id}
-                to={to}
-                className={`dashboard-tile${isPending ? ' dashboard-tile--pending' : ''}`}
-                aria-label={
-                  isPending ? `${tile.label} (por construir)` : tile.label
-                }
-              >
+            const className = `dashboard-tile${isPending ? ' dashboard-tile--pending' : ''}`
+            const ariaLabel = isPending ? `${tile.label} (por construir)` : tile.label
+            const content = (
+              <>
                 <div className="dashboard-tile__media">
                   {tile.image ? (
                     <img
@@ -62,6 +57,27 @@ export default function DashboardPage() {
                   ) : null}
                 </div>
                 <span className="dashboard-tile__label">{tile.label}</span>
+              </>
+            )
+
+            if (to.startsWith('http')) {
+              return (
+                <a
+                  key={tile.id}
+                  href={to}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={className}
+                  aria-label={ariaLabel}
+                >
+                  {content}
+                </a>
+              )
+            }
+
+            return (
+              <Link key={tile.id} to={to} className={className} aria-label={ariaLabel}>
+                {content}
               </Link>
             )
           })}
