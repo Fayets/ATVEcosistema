@@ -65,8 +65,6 @@ export default function DashboardPage() {
                 <a
                   key={tile.id}
                   href={to}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className={className}
                   aria-label={ariaLabel}
                 >
