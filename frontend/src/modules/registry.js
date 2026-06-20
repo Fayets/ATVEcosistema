@@ -13,14 +13,6 @@ const TILE_IMAGE = '/ATVWhite.png'
 
 export const dashboardTiles = [
   {
-    id: 'onboarding',
-    path: 'onboarding',
-    hubPath: '/onboarding',
-    label: 'ATV ONBOARDING',
-    status: 'existe',
-    image: TILE_IMAGE,
-  },
-  {
     id: 'landing',
     path: 'landing',
     hubPath: 'https://landing.atvos.io/dashboard',
@@ -28,8 +20,15 @@ export const dashboardTiles = [
     status: 'existe',
     image: TILE_IMAGE,
   },
+  {
+    id: 'onboarding',
+    path: 'onboarding',
+    hubPath: '/onboarding',
+    label: 'ATV ONBOARDING',
+    status: 'existe',
+    image: TILE_IMAGE,
+  },
   { id: 'clientes', path: 'clientes', label: 'ATV CLIENTS', status: 'existe', image: TILE_IMAGE },
-  { id: 'finanzas', path: 'finanzas', label: 'ATV FINANZAS', status: 'por_construir', image: TILE_IMAGE },
   { id: 'producto', path: 'producto', label: 'ATV PRODUCTO', status: 'por_construir', image: TILE_IMAGE },
   { id: 'ventas', path: 'ventas', label: 'ATV VENTAS', status: 'existe', image: TILE_IMAGE },
   { id: 'marketing', path: 'marketing', label: 'ATV MARKETING', status: 'existe', image: TILE_IMAGE },
