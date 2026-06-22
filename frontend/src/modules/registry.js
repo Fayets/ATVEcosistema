@@ -32,6 +32,13 @@ export const dashboardTiles = [
   { id: 'producto', path: 'producto', label: 'ATV PRODUCTO', status: 'por_construir', image: TILE_IMAGE },
   { id: 'ventas', path: 'ventas', label: 'ATV VENTAS', status: 'existe', image: TILE_IMAGE },
   { id: 'marketing', path: 'marketing', label: 'ATV MARKETING', status: 'existe', image: TILE_IMAGE },
-  { id: 'discord', path: 'discord', label: 'ATV DISCORD', status: 'por_construir', image: TILE_IMAGE },
+  {
+    id: 'backbone',
+    path: 'backbone',
+    hubPath: 'https://backbone.atvos.io',
+    label: 'ATV BACKBONE',
+    status: 'existe',
+    image: TILE_IMAGE,
+  },
   { id: 'docs', path: 'docs', label: 'ATV DOCS', status: 'por_construir', image: TILE_IMAGE },
 ]
