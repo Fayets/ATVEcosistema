@@ -6,7 +6,6 @@ import LoginPage from './pages/LoginPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import OnboardingEmbedPage from './pages/OnboardingEmbedPage.jsx'
 
-const ClientsHome = lazy(() => import('./modules/clients/ClientsHome.jsx'))
 const FinanzasHome = lazy(() => import('./modules/finanzas/FinanzasHome.jsx'))
 const ProductoHome = lazy(() => import('./modules/producto/ProductoHome.jsx'))
 const VentasHome = lazy(() => import('./modules/ventas/VentasHome.jsx'))
@@ -54,15 +53,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/m/clientes"
-            element={
-              <ProtectedRoute>
-                <ClientsHome />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/m/entregables" element={<Navigate to="/m/clientes" replace />} />
           <Route
             path="/m/finanzas"
             element={
