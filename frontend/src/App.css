@@ -4,7 +4,6 @@
 .login-page,
 .atv-shell {
   position: relative;
-  isolation: isolate;
   min-height: 100%;
   min-height: 100dvh;
   min-height: 100svh;
@@ -19,51 +18,25 @@
   display: flex;
   flex-direction: column;
   background-color: #0a0505;
-  background-image: radial-gradient(
-    ellipse 95% 75% at 50% 38%,
-    rgba(52, 22, 22, 0.88) 0%,
-    rgba(20, 10, 10, 0.96) 48%,
-    #000000 100%
-  );
-}
-
-.login-page::before,
-.dashboard-page::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background: radial-gradient(
-    ellipse 115% 95% at 50% 45%,
-    transparent 35%,
-    rgba(0, 0, 0, 0.5) 100%
-  );
-}
-
-.atv-page__glow {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -52%);
-  pointer-events: none;
-  z-index: 0;
-  background: radial-gradient(
-    ellipse 70% 60% at 50% 50%,
-    rgba(70, 32, 32, 0.42) 0%,
-    transparent 72%
-  );
-  filter: blur(52px);
-}
-
-.atv-page__glow--login {
-  width: min(92vw, 34rem);
-  height: 26rem;
-}
-
-.atv-page__glow--dashboard {
-  width: min(96vw, 62rem);
-  height: 34rem;
+  /* Base + glow + vignette en una sola capa (sin blur ni elementos fixed extra) */
+  background-image:
+    radial-gradient(
+      ellipse 115% 95% at 50% 45%,
+      transparent 35%,
+      rgba(0, 0, 0, 0.48) 100%
+    ),
+    radial-gradient(
+      ellipse 85% 60% at 50% 42%,
+      rgba(70, 32, 32, 0.36) 0%,
+      rgba(52, 22, 22, 0.12) 45%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 95% 75% at 50% 38%,
+      rgba(52, 22, 22, 0.88) 0%,
+      rgba(20, 10, 10, 0.96) 48%,
+      #000000 100%
+    );
 }
 
 .login-page.atv-shell--foto,
@@ -125,19 +98,13 @@
   color: #fff;
   cursor: pointer;
   background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
-  box-shadow:
-    0 4px 20px rgba(230, 57, 70, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(230, 57, 70, 0.28);
   transition:
-    box-shadow 0.15s ease,
-    transform 0.1s ease,
+    transform 0.15s ease,
     opacity 0.15s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  box-shadow:
-    0 6px 28px rgba(230, 57, 70, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transform: translateY(-1px);
 }
 
@@ -203,10 +170,8 @@
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow:
-    0 24px 80px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  animation: login-enter 0.55s ease both;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
+  animation: login-enter 0.4s ease both;
 }
 
 .login-panel--loading {
@@ -451,7 +416,6 @@
 
 .dashboard-page {
   position: relative;
-  isolation: isolate;
   min-height: 100%;
   min-height: 100dvh;
   min-height: 100svh;
@@ -495,7 +459,7 @@
   row-gap: clamp(0.85rem, 2.2vw, 1.35rem);
   width: min(100%, 58rem);
   margin: 0 auto;
-  animation: login-enter 0.55s ease both;
+  animation: login-enter 0.4s ease both;
 }
 
 @media (max-width: 48rem) {
@@ -523,14 +487,25 @@
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
   transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.dashboard-tile:not(.dashboard-tile--pending):hover {
+  transform: translate3d(0, -2px, 0);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.dashboard-tile:not(.dashboard-tile--pending):hover .dashboard-tile__label {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.dashboard-tile:active {
+  transform: translate3d(0, 0, 0);
 }
 
 .dashboard-tile__icon {
@@ -558,24 +533,7 @@
   text-align: center;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.52);
-  transition: color 0.2s ease;
-}
-
-.dashboard-tile:not(.dashboard-tile--pending):hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.035);
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-.dashboard-tile:not(.dashboard-tile--pending):hover .dashboard-tile__label {
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.dashboard-tile:active {
-  transform: translateY(0);
+  transition: color 0.15s ease;
 }
 
 .dashboard-tile:focus-visible {

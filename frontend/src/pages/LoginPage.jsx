@@ -82,8 +82,6 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
-      <div className="atv-page__glow atv-page__glow--login" aria-hidden="true" />
-
       <main className="login-main">
         <div className={`login-panel${checkingSession ? ' login-panel--loading' : ''}`}>
           <div className="login-hero">

@@ -51,8 +51,6 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-page">
-      <div className="atv-page__glow atv-page__glow--dashboard" aria-hidden="true" />
-
       <header className="dashboard-header">
         <img
           src="/AumentaTuValorLogo.png"
