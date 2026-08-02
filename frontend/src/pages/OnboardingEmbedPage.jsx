@@ -4,7 +4,7 @@ const ONBOARDING_EMBED_URL = 'https://onboarding.atvos.io/dashboard'
 
 export default function OnboardingEmbedPage() {
   return (
-    <div className="onboarding-embed-shell">
+    <div className="atv-shell onboarding-embed-shell">
       <header className="onboarding-embed-bar">
         <Link to="/dashboard" className="onboarding-embed-back">
           ← Hub ATV

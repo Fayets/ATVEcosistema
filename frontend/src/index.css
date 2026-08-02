@@ -5,16 +5,18 @@
 }
 
 :root {
-  /* Referencia ATV dashboard: alto contraste, negro casi puro + rojo systémico */
-  --atv-bg: #0d0d0d;
+  /* Alineado con atv-onboarding */
+  --atv-bg: #000000;
   --atv-bg-elev: #121212;
-  --atv-surface: #141414;
-  --atv-accent: #ff3b30;
-  --atv-accent-soft: rgba(255, 59, 48, 0.14);
-  --atv-text: #ececec;
-  --atv-muted: #888888;
+  --atv-surface: rgba(255, 255, 255, 0.04);
+  --atv-accent: #e63946;
+  --atv-accent-dark: #c1121f;
+  --atv-accent-soft: rgba(230, 57, 70, 0.12);
+  --atv-accent-glow: rgba(230, 57, 70, 0.35);
+  --atv-text: #ffffff;
+  --atv-muted: rgba(255, 255, 255, 0.45);
   --atv-border-soft: rgba(255, 255, 255, 0.08);
-  --atv-border-accent: rgba(255, 59, 48, 0.22);
+  --atv-border-accent: rgba(230, 57, 70, 0.4);
   --atv-font-sans:
     'Inter',
     system-ui,
@@ -33,6 +35,7 @@ body,
 }
 
 body {
+  position: relative;
   font-family: var(--atv-font-sans);
   background-color: var(--atv-bg);
   color: var(--atv-text);
@@ -40,4 +43,39 @@ body {
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::before {
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(
+    circle,
+    rgba(230, 57, 70, 0.14) 0%,
+    rgba(230, 57, 70, 0.04) 45%,
+    transparent 70%
+  );
+  top: -200px;
+  right: -120px;
+}
+
+body::after {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    rgba(230, 57, 70, 0.08) 0%,
+    rgba(230, 57, 70, 0.02) 45%,
+    transparent 70%
+  );
+  bottom: -120px;
+  left: -100px;
 }
