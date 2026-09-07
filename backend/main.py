@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.controllers.auth_controller import router as auth_router
 from src.controllers.health_controller import router as health_router
+from src.controllers.hiring_controller import router as hiring_router
 from src.db import init_db
 
 
@@ -30,6 +31,7 @@ app.add_middleware(
 )
 app.include_router(health_router)
 app.include_router(auth_router)
+app.include_router(hiring_router)
 
 
 @app.get("/")

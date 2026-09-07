@@ -126,3 +126,39 @@ export async function submitOnboarding(payload) {
   })
   return parseResponse(res, 'No se pudo enviar el formulario.')
 }
+
+// —— ATV Hiring: postulaciones (schema `hiring`, gestionadas desde el ecosystem) ——
+
+export async function listHiringApplications({ role_slug, status } = {}) {
+  const params = new URLSearchParams()
+  if (role_slug) params.set('role_slug', role_slug)
+  if (status) params.set('status', status)
+  const qs = params.toString()
+  const res = await fetch(`${API_BASE}/api/hiring/applications${qs ? `?${qs}` : ''}`, {
+    credentials: 'include',
+  })
+  return parseResponse(res, 'No se pudieron cargar las postulaciones.')
+}
+
+export async function getHiringMetrics() {
+  const res = await fetch(`${API_BASE}/api/hiring/applications/metrics`, { credentials: 'include' })
+  return parseResponse(res, 'No se pudieron cargar las métricas de hiring.')
+}
+
+export async function updateHiringApplication(id, payload) {
+  const res = await fetch(`${API_BASE}/api/hiring/applications/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  })
+  return parseResponse(res, 'No se pudo actualizar la postulación.')
+}
+
+export async function deleteHiringApplication(id) {
+  const res = await fetch(`${API_BASE}/api/hiring/applications/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+  return parseResponse(res, 'No se pudo eliminar la postulación.')
+}

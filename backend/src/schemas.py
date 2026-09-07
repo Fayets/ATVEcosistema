@@ -17,3 +17,13 @@ class HealthResponse(BaseModel):
 class HealthDbResponse(BaseModel):
     status: str
     schema: str
+
+
+# —— ATV Hiring (postulaciones, schema `hiring`) ——
+
+HIRING_STATUSES = ("nueva", "revisando", "entrevista", "contratado", "descartado")
+
+
+class HiringApplicationUpdate(BaseModel):
+    status: str | None = None
+    notes: str | None = None

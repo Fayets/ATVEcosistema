@@ -44,6 +44,8 @@ def _ensure_ecosystem_schema() -> None:
         with conn:
             with conn.cursor() as cur:
                 cur.execute(f'CREATE SCHEMA IF NOT EXISTS "{DB_SCHEMA}"')
+                # Schema de la bolsa de trabajo (lo llena hiring-main; acá se lee y gestiona)
+                cur.execute('CREATE SCHEMA IF NOT EXISTS "hiring"')
     finally:
         conn.close()
 
