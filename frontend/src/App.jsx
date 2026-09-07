@@ -17,7 +17,6 @@ const DiscordMetrics = lazy(() => import('./modules/discord/DiscordMetrics.jsx')
 const DiscordSettings = lazy(() => import('./modules/discord/DiscordSettings.jsx'))
 const OnboardingHome = lazy(() => import('./modules/onboarding/OnboardingHome.jsx'))
 const DocsHome = lazy(() => import('./modules/docs/DocsHome.jsx'))
-const HiringHome = lazy(() => import('./modules/hiring/HiringHome.jsx'))
 
 function RouteFallback() {
   return (
@@ -97,14 +96,6 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <OnboardingHome />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/m/hiring"
-            element={
-              <ProtectedRoute>
-                <HiringHome />
               </ProtectedRoute>
             }
           />
