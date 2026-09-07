@@ -7,7 +7,6 @@ import DashboardPage from './pages/DashboardPage.jsx'
 import OnboardingEmbedPage from './pages/OnboardingEmbedPage.jsx'
 
 const FinanzasHome = lazy(() => import('./modules/finanzas/FinanzasHome.jsx'))
-const ProductoHome = lazy(() => import('./modules/producto/ProductoHome.jsx'))
 const VentasHome = lazy(() => import('./modules/ventas/VentasHome.jsx'))
 const MarketingHome = lazy(() => import('./modules/marketing/MarketingHome.jsx'))
 const DiscordShell = lazy(() => import('./modules/discord/DiscordShell.jsx'))
@@ -59,14 +58,6 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <FinanzasHome />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/m/producto"
-            element={
-              <ProtectedRoute>
-                <ProductoHome />
               </ProtectedRoute>
             }
           />

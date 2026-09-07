@@ -36,7 +36,14 @@ export const dashboardTiles = [
     status: 'existe',
     image: TILE_IMAGE,
   },
-  { id: 'hiring', path: 'hiring', label: 'ATV HIRING', status: 'existe', image: TILE_IMAGE },
+  {
+    id: 'hiring',
+    path: 'hiring',
+    hubPath: 'https://hiring.atvos.io/dashboard',
+    label: 'ATV HIRING',
+    status: 'existe',
+    image: TILE_IMAGE,
+  },
   { id: 'ventas', path: 'ventas', label: 'ATV VENTAS', status: 'existe', image: TILE_IMAGE },
   { id: 'marketing', path: 'marketing', label: 'ATV MARKETING', status: 'existe', image: TILE_IMAGE },
   {
@@ -47,6 +54,5 @@ export const dashboardTiles = [
     status: 'existe',
     image: TILE_IMAGE,
   },
-  { id: 'producto', path: 'producto', label: 'ATV PRODUCTO', status: 'por_construir', image: TILE_IMAGE },
   { id: 'docs', path: 'docs', label: 'ATV DOCS', status: 'por_construir', image: TILE_IMAGE },
 ]
