@@ -54,5 +54,12 @@ export const dashboardTiles = [
     status: 'existe',
     image: TILE_IMAGE,
   },
-  { id: 'docs', path: 'docs', label: 'ATV DOCS', status: 'por_construir', image: TILE_IMAGE },
+  {
+    id: 'roadmaps',
+    path: 'roadmaps',
+    hubPath: 'https://roadmaps.atvos.io',
+    label: 'ATV ROADMAP',
+    status: 'existe',
+    image: TILE_IMAGE,
+  },
 ]
