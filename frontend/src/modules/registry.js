@@ -21,6 +21,14 @@ export const dashboardTiles = [
     image: TILE_IMAGE,
   },
   {
+    id: 'webinar',
+    path: 'webinar',
+    hubPath: 'https://join.atvos.io/dashboard',
+    label: 'ATV WEBINAR',
+    status: 'existe',
+    image: TILE_IMAGE,
+  },
+  {
     id: 'onboarding',
     path: 'onboarding',
     hubPath: '/onboarding',
