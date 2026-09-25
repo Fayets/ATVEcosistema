@@ -22,6 +22,23 @@ def create_session_token(username: str) -> str:
     return base64.urlsafe_b64encode(raw).decode("ascii")
 
 
+HANDOFF_MAX_AGE_SECONDS = 60
+
+
+def create_handoff_token(username: str) -> str:
+    """Pase de un solo tramo para abrir una app que vive fuera de .atvos.io.
+
+    Mismo formato y SECRET que la sesión, con "p": "handoff" para que la app de
+    destino solo lo acepte en su endpoint de canje, y 60 s de vida porque viaja en
+    la URL.
+    """
+    exp = int(time.time()) + HANDOFF_MAX_AGE_SECONDS
+    payload = json.dumps({"u": username, "exp": exp, "p": "handoff"}, separators=(",", ":"))
+    sig = hmac.new(_secret(), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    raw = f"{payload}.{sig}".encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("ascii")
+
+
 def verify_session_token(token: str) -> str | None:
     if not token:
         return None

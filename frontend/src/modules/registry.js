@@ -15,7 +15,7 @@ export const dashboardTiles = [
   {
     id: 'landing',
     path: 'landing',
-    hubPath: 'https://join.atvos.io/dashboard',
+    hubPath: 'https://ecosystem.atvos.io/api/auth/handoff?app=landing',
     label: 'ATV LANDING',
     status: 'existe',
     image: TILE_IMAGE,
